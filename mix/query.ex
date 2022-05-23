@@ -1,26 +1,51 @@
-defmodule Q do
+defmodule Cldr.Sql.Query do
   import Ecto.Query
   alias Cldr.Model
 
+  # A macro to build a fragment for applying
+  # a collation to a column in an ORDER BY
+  # clause.
+
   defmacrop collate(column) do
     quote do
-      fragment("? COLLATE \"?\"", unquote(column), type(^Q.collation(), :unsafe!))
+      fragment("? COLLATE \"?\"", unquote(column), type(^Cldr.Sql.Query.collation(), :unsafe!))
     end
   end
 
-  def collation do
-    cldr = Cldr.get_locale().cldr_locale_name
-    "#{cldr}-x-icu"
+  @doc """
+  Returns the Postgres ICU-based collation name
+  for a given Cldr locale.
+
+  """
+  def collation(locale \\ Cldr.get_locale()) do
+    "#{locale.cldr_locale_name}-x-icu"
   end
 
-  def q() do
+  @doc """
+  Interpolate the collation into the query
+  which is not otherwise possible with Ecto
+  because Postgres does not allow parameter
+  interpoliation for identifiers (like table
+  names and collation names). Only text
+  replacement works.
+  """
+  def order_by(locale \\ Cldr.get_locale()) do
     from m in Model,
       select: m.name,
       where: m.name == "Kip",
       order_by: ^[
-        asc: dynamic([m], fragment("? COLLATE \"?\"", m.name, type(^collation(), :unsafe!))),
+        asc: dynamic([m], fragment("? COLLATE \"?\"", m.name, type(^collation(locale), :unsafe!))),
         desc: dynamic([m], collate(m.name))
       ]
   end
 
+  @doc """
+  Interpolate a table name into an "exists" subquery.
+
+  """
+  def exists(schema \\ "models") do
+    from(m in Model,
+      select: m.name,
+      where: fragment("exists (SELECT 1 FROM \"?\" o WHERE o.name = ?)", type(^schema, :unsafe!), m.name))
+  end
 end
