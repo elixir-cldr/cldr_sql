@@ -8,7 +8,8 @@ defmodule Cldr.Sql.Query do
 
   defmacrop collate(column) do
     quote do
-      fragment("? COLLATE \"?\"", unquote(column), type(^Cldr.Sql.Query.collation(), :unsafe!))
+      fragment("? COLLATE \"?\"", unquote(column),
+        type(^Cldr.Sql.Query.collation(), :unsafe!))
     end
   end
 
@@ -32,10 +33,9 @@ defmodule Cldr.Sql.Query do
   def order_by(locale \\ Cldr.get_locale()) do
     from m in Model,
       select: m.name,
-      where: m.name == "Kip",
-      order_by: ^[
-        asc: dynamic([m], fragment("? COLLATE \"?\"", m.name, type(^collation(locale), :unsafe!))),
-        desc: dynamic([m], collate(m.name))
+      order_by: [
+        asc: fragment("? COLLATE \"?\"", m.name, type(^collation(locale), :unsafe!)),
+        desc: collate(m.name)
       ]
   end
 
