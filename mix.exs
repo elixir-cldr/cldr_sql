@@ -87,7 +87,7 @@ defmodule CldrSql.MixProject do
       {:ex_cldr, "~> 2.29"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:jason, "~> 1.0"},
-      {:ecto, path: "../ecto", override: true},
+      {:ecto, github: "kipcole9/ecto", branch: "fragment_escape", override: true},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, "~> 0.15"},
       {:benchee, "~> 1.0", optional: true, only: :dev},

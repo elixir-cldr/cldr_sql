@@ -8,7 +8,7 @@ defmodule Cldr.Sql.Query do
 
   defmacrop collate(column, locale) do
     quote do
-      fragment("? COLLATE \"?\"", unquote(column),
+      fragment("? COLLATE ?", unquote(column),
         escape!(^collation(unquote(locale))))
     end
   end
@@ -34,7 +34,8 @@ defmodule Cldr.Sql.Query do
     from m in Model,
       select: m.name,
       order_by: [
-        asc: fragment("? COLLATE \"?\"", m.name, escape!(^collation(locale))),
+        asc: fragment("? COLLATE ?", m.name, escape!(^collation(locale))),
+        asc: fragment("? COLLATE ?", m.name, escape!("se-x-icu")),
         desc: collate(m.name, Cldr.get_locale())
       ]
   end
@@ -46,6 +47,6 @@ defmodule Cldr.Sql.Query do
   def exists(schema \\ "models") do
     from(m in Model,
       select: m.name,
-      where: fragment("exists (SELECT 1 FROM \"?\" o WHERE o.name = ?)", escape!(^schema), m.name))
+      where: fragment("exists (SELECT 1 FROM ? o WHERE o.name = ?)", escape!(^schema), m.name))
   end
 end
