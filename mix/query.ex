@@ -6,10 +6,10 @@ defmodule Cldr.Sql.Query do
   # a collation to a column in an ORDER BY
   # clause.
 
-  defmacrop collate(column) do
+  defmacrop collate(column, locale) do
     quote do
       fragment("? COLLATE \"?\"", unquote(column),
-        type(^Cldr.Sql.Query.collation(), :unsafe!))
+        escape!(^collation(unquote(locale))))
     end
   end
 
@@ -18,7 +18,7 @@ defmodule Cldr.Sql.Query do
   for a given Cldr locale.
 
   """
-  def collation(locale \\ Cldr.get_locale()) do
+  def collation(locale) do
     "#{locale.cldr_locale_name}-x-icu"
   end
 
@@ -34,8 +34,8 @@ defmodule Cldr.Sql.Query do
     from m in Model,
       select: m.name,
       order_by: [
-        asc: fragment("? COLLATE \"?\"", m.name, type(^collation(locale), :unsafe!)),
-        desc: collate(m.name)
+        asc: fragment("? COLLATE \"?\"", m.name, escape!(^collation(locale))),
+        desc: collate(m.name, Cldr.get_locale())
       ]
   end
 
