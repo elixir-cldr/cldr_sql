@@ -46,6 +46,6 @@ defmodule Cldr.Sql.Query do
   def exists(schema \\ "models") do
     from(m in Model,
       select: m.name,
-      where: fragment("exists (SELECT 1 FROM \"?\" o WHERE o.name = ?)", type(^schema, :unsafe!), m.name))
+      where: fragment("exists (SELECT 1 FROM \"?\" o WHERE o.name = ?)", escape!(^schema), m.name))
   end
 end
