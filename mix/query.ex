@@ -6,10 +6,17 @@ defmodule Cldr.Sql.Query do
   # a collation to a column in an ORDER BY
   # clause.
 
+  defmacrop collate(column) do
+    quote do
+      fragment("? COLLATE ?", unquote(column),
+        literal(^collation(Cldr.get_locale())))
+    end
+  end
+
   defmacrop collate(column, locale) do
     quote do
       fragment("? COLLATE ?", unquote(column),
-        escape!(^collation(unquote(locale))))
+        literal(^collation(unquote(locale))))
     end
   end
 
@@ -34,9 +41,10 @@ defmodule Cldr.Sql.Query do
     from m in Model,
       select: m.name,
       order_by: [
-        asc: fragment("? COLLATE ?", m.name, escape!(^collation(locale))),
-        asc: fragment("? COLLATE ?", m.name, escape!("se-x-icu")),
-        desc: collate(m.name, Cldr.get_locale())
+        asc: fragment("? COLLATE ?", m.name, literal(^collation(locale))),
+        asc: fragment("? COLLATE ?", m.name, literal(^"se-x-icu")),
+        desc: collate(m.name, Cldr.get_locale()),
+        asc: collate(m.name)
       ]
   end
 
@@ -47,6 +55,6 @@ defmodule Cldr.Sql.Query do
   def exists(schema \\ "models") do
     from(m in Model,
       select: m.name,
-      where: fragment("exists (SELECT 1 FROM ? o WHERE o.name = ?)", escape!(^schema), m.name))
+      where: fragment("exists (SELECT 1 FROM ? o WHERE o.name = ?)", literal(^schema), m.name))
   end
 end
